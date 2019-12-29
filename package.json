@@ -1,0 +1,19 @@
+{
+  "name": "bloglist-backend",
+  "version": "1.0.0",
+  "description": "Blog List Backend",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/izaoli/bloglist-backend.git"
+  },
+  "author": "Izabella Oliveira",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/izaoli/bloglist-backend/issues"
+  },
+  "homepage": "https://github.com/izaoli/bloglist-backend#readme"
+}
