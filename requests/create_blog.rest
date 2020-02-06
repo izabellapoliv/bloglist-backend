@@ -1,9 +1,10 @@
 POST http://localhost:3003/api/blogs
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im9ybGFuZG90aGVicmFuZG8iLCJpZCI6IjVlM2M4Y2RiNDVhZjIzMjZjODY2YmQ4MSIsImlhdCI6MTU4MTAyNjU1N30.xDepFAGzQdTGs9jFLgSrzFwAfHGoj8N-v2kGTBiLIKY
 
 {
-    "title": "",
-    "author": "Izabella",
-    "url": "https://fullstackopen.com/en/part4/structure_of_backend_application_introduction_to_testing",
-    "likes": 7
+    "title": "10 Awesome Ways to Photograph Butterflies",
+    "author": "Emillie Owens",
+    "url": "https://SiestaMailedLintel.com",
+    "likes": 36
 }
