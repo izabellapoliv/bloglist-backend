@@ -14,7 +14,7 @@ expressRouter.get('/:id', async (request, response) => {
 
 expressRouter.post('/', async (request, response) => {
     const body = request.body
-    if (!body.title) {
+    if (!(body.title || body.url)) {
         return response.status(400).json({
             error: 'title missing'
         })
@@ -36,15 +36,17 @@ expressRouter.post('/', async (request, response) => {
 })
 
 expressRouter.put('/:id', async (request, response) => {
-    if (!request.params.id) {
+    if (!(request.params.id || request.body.likes)) {
         return response.status(400).json({
-            error: 'id missing'
+            error: 'check the payload'
         })
     }
 
-    const newBlog = new Blog(request.body)
-    await newBlog.save()
-    response.json(newBlog)
+    const newBlog = await Blog.findById(request.params.id)
+    newBlog.likes = request.body.likes
+
+    const saved = await newBlog.save()
+    response.json(saved)
 })
 
 expressRouter.delete('/:id', async (request, response) => {

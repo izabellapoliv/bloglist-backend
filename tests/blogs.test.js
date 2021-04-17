@@ -34,7 +34,7 @@ describe('endpoint get /', () => {
 
     test('contains unique id', async () => {
         const response = await api.get(`/api/blogs`)
-        expect(response.body[0].id).toBeDefined()
+        response.body.map(blog => expect(blog.id).toBeDefined())
     })
 })
 
@@ -76,6 +76,22 @@ describe('endpoint post /', () => {
 
     test('blog without title is not added', async () => {
         const blog = {
+            author: 'George Orwell',
+            url: 'https://www.google.com/'
+        }
+
+        await api
+            .post('/api/blogs')
+            .send(blog)
+            .expect(400)
+
+        const blogsAtEnd = await helper.blogsInDb()
+        expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
+    })
+
+    test('blog without url is not added', async () => {
+        const blog = {
+            title: '1984',
             author: 'George Orwell'
         }
 
@@ -95,13 +111,11 @@ describe('endpoint post /', () => {
             url: "https://fullstackopen.com/"
         }
 
-        await api
+        const response = await api
             .post('/api/blogs')
             .send(blog)
             .expect(200)
-        const blogsAtEnd = await helper.blogsInDb()
-        const blogAdded = blogsAtEnd.filter(r => r.title == blog.title)
-        expect(blogAdded[0].likes).toEqual(0)
+        expect(response.body.likes).toEqual(0)
     })
 })
 
@@ -119,6 +133,24 @@ describe('endpoint delete /:id', () => {
 
         const titles = blogsAtEnd.map(r => r.title)
         expect(titles).not.toContain(blogToDelete.title)
+    })
+})
+
+describe('endpoint put /:id', () => {
+    test('increase likes by 1', async () => {
+        const blogsAtStart = await helper.blogsInDb()
+        const blog = blogsAtStart[0]
+        blog.likes = blog.likes + 1
+
+        const response = await api
+            .put(`/api/blogs/${blog.id}`)
+            .send(blog)
+        const blogsAtEnd = await helper.blogsInDb()
+
+        expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
+
+        const blogChanged = response.body
+        expect(blogChanged.likes).toEqual(blog.likes)
     })
 })
 
