@@ -54,7 +54,13 @@ expressRouter.put('/:id', async (request, response) => {
         })
     }
 
-    const newBlog = await Blog.findById(request.params.id)
+    const newBlog = await Blog.findById(request.params.id).populate('user')
+    const token = request.token
+    const decodedToken = security.verify(token)
+    if (!token || !decodedToken.id) {
+        return response.status(401).json({ error: 'token missing or invalid' })
+    }
+
     newBlog.likes = request.body.likes
 
     const saved = await newBlog.save()
@@ -68,8 +74,10 @@ expressRouter.delete('/:id', async (request, response) => {
     if (!token || !decodedToken.id) {
         return response.status(401).json({ error: 'token missing or invalid' })
     }
-    if (decodedToken.id.toString() !== blog.user._id.toString()) {
-        return response.status(403).json({ error: 'forbidden' })
+    if (blog.user) {
+        if (decodedToken.id.toString() !== blog.user._id.toString()) {
+            return response.status(403).json({ error: 'forbidden' })
+        }
     }
 
     await blog.remove()
