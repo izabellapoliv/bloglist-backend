@@ -1,17 +1,27 @@
-const expressRouter = require('express').Router()
-const Login = require('../models/login')
-const mongoose = require('mongoose')
+const bcrypt = require('bcrypt')
+const loginRouter = require('express').Router()
+const User = require('../models/user')
+const security = require('../utils/security')
 
-expressRouter.post('/', (request, response) => {
-    const user = {
-        _id: "1YFomrEXjSi0DFq0SWfDNUIQjztWSlmW",
-        name: 'Izabella Oliveira',
-        username: 'user',
-        password: '123456',
-        token: 'etgp9kHdLdFq4Uc7Dhki',
+loginRouter.post('/', async (request, response) => {
+    const body = request.body
+
+    const user = await User.findOne({ username: body.username })
+    const passwordCorrect = user === null
+        ? false
+        : await bcrypt.compare(body.password, user.passwordHash)
+
+    if (!(user && passwordCorrect)) {
+        return response.status(401).json({
+            error: 'invalid credentials'
+        })
     }
 
-    response.json(user)
+    const token = security.token(user)
+
+    response
+        .status(200)
+        .send({ token, username: user.username, name: user.name })
 })
 
-module.exports = expressRouter
+module.exports = loginRouter

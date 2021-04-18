@@ -22,7 +22,8 @@ const schema = new mongoose.Schema({
     },
     likes: Number,
     user: {
-        type: mongoose.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
         required: false
     }
 })

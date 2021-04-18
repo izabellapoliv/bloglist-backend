@@ -2,16 +2,30 @@ const mongoose = require('mongoose')
 const supertest = require('supertest')
 const app = require('../app')
 const Blog = require('../models/blog')
+const User = require('../models/user')
 const helper = require('./test_helper')
+const security = require('../utils/security')
 
 const api = supertest(app)
 
 beforeEach(async () => {
+    await User.deleteMany({})
+    const userObjects = helper.initialUsers
+        .map(user => new User(user))
+    const promiseArrayUsers = userObjects.map(user => user.save())
+    await Promise.all(promiseArrayUsers)
+
+    const users = await helper.usersInDb();
+    const userId = users[0].id
+
+    const allBlogs = helper.initialBlogs
+        .map(blog => ({ ...blog, user: userId }))
+
     await Blog.deleteMany({})
-    const blogObjects = helper.initialBlogs
+    const blogObjects = allBlogs
         .map(blog => new Blog(blog))
-    const promiseArray = blogObjects.map(blog => blog.save())
-    await Promise.all(promiseArray)
+    const promiseArrayBlogs = blogObjects.map(blog => blog.save())
+    await Promise.all(promiseArrayBlogs)
 })
 
 describe('endpoint get /', () => {
@@ -55,6 +69,9 @@ describe('endpoint get /:id', () => {
 
 describe('endpoint post /', () => {
     test('a valid blog can be added', async () => {
+        const users = await helper.usersWithoutJSON();
+        const token = security.token(users[0])
+
         const blog = {
             title: "Frankstein",
             author: "Mary Shelley",
@@ -63,6 +80,7 @@ describe('endpoint post /', () => {
         }
 
         await api.post('/api/blogs')
+            .auth(token, { type: 'bearer' })
             .send(blog)
             .expect(200)
             .expect('Content-Type', /application\/json/)
@@ -154,6 +172,6 @@ describe('endpoint put /:id', () => {
     })
 })
 
-afterAll(() => {
-    mongoose.connection.close()
+afterAll(async () => {
+    await mongoose.connection.close()
 })
