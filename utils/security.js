@@ -9,6 +9,11 @@ const token = user => {
     return jwt.sign(userForToken, process.env.SECRET, { expiresIn: 60 * 60 })
 }
 
+const verify = token => {
+    const decodedToken = jwt.verify(token, process.env.SECRET)
+    return decodedToken
+}
+
 module.exports = {
-    token
+    token, verify
 }

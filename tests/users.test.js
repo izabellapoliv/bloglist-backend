@@ -15,44 +15,34 @@ beforeEach(async () => {
     await Promise.all(promiseArray)
 })
 
-// describe('endpoint get /', () => {
-//     test('blogs are returned as json', async () => {
-//         await api.get('/api/blogs')
-//             .expect(200)
-//             .expect('Content-Type', /application\/json/)
-//     })
+describe('endpoint get /', () => {
+    test('users are returned as json', async () => {
+        await api.get('/api/users')
+            .expect(200)
+            .expect('Content-Type', /application\/json/)
+    })
 
-//     test('the amount of blogs is correct', async () => {
-//         const response = await api.get('/api/blogs')
-//         expect(response.body.length).toEqual(helper.initialBlogs.length)
-//     })
+    test('the amount of users is correct', async () => {
+        const response = await api.get('/api/users')
+        expect(response.body.length).toEqual(helper.initialUsers.length)
+    })
 
-//     test('a specific blog is within the returned blogs', async () => {
-//         const response = await api.get('/api/blogs')
-//         const allTitles = response.body.map(r => r.title)
-//         expect(allTitles).toContain(helper.initialBlogs[1].title)
-//     })
+    test('a specific user is within the returned users', async () => {
+        const response = await api.get('/api/users')
+        const all = response.body.map(r => r.username)
+        expect(all).toContain(helper.initialUsers[1].username)
+    })
 
-//     test('contains unique id', async () => {
-//         const response = await api.get(`/api/blogs`)
-//         response.body.map(blog => expect(blog.id).toBeDefined())
-//     })
-// })
+    test('contains unique id', async () => {
+        const response = await api.get(`/api/users`)
+        response.body.map(user => expect(user.id).toBeDefined())
+    })
 
-// describe('endpoint get /:id', () => {
-//     test('a specific blog can be viewed', async () => {
-//         const blogsAtStart = await helper.blogsInDb()
-
-//         const blogToView = blogsAtStart[0]
-
-//         const resultBlog = await api.get(`/api/blogs/${blogToView.id}`)
-//             .expect(200)
-//             .expect('Content-Type', /application\/json/)
-//         const processedBlogToView = JSON.parse(JSON.stringify(blogToView))
-
-//         expect(resultBlog.body).toEqual(processedBlogToView)
-//     })
-// })
+    test('contains blogs', async () => {
+        const response = await api.get(`/api/users`)
+        response.body.map(user => expect(user.blogs).toBeDefined())
+    })
+})
 
 describe('endpoint post /', () => {
     test('a new user can be added', async () => {
@@ -84,6 +74,27 @@ describe('endpoint post /', () => {
             .expect('Content-Type', /application\/json/)
 
         expect(result.body.error).toContain('`username` to be unique')
+
+        const usersAtEnd = await helper.usersInDb()
+        expect(usersAtEnd).toHaveLength(usersAtStart.length)
+    })
+
+    test('creation fails with proper statuscode and message if password too short', async () => {
+        const usersAtStart = await helper.usersInDb()
+
+        const newUser = {
+            name: 'myuser',
+            username: 'example@email.com',
+            password: 'oi',
+        }
+
+        const result = await api
+            .post('/api/users')
+            .send(newUser)
+            .expect(400)
+            .expect('Content-Type', /application\/json/)
+
+        expect(result.body.error).toContain('password too short')
 
         const usersAtEnd = await helper.usersInDb()
         expect(usersAtEnd).toHaveLength(usersAtStart.length)

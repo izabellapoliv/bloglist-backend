@@ -93,6 +93,9 @@ describe('endpoint post /', () => {
     })
 
     test('blog without title is not added', async () => {
+        const users = await helper.usersWithoutJSON();
+        const token = security.token(users[0])
+
         const blog = {
             author: 'George Orwell',
             url: 'https://www.google.com/'
@@ -100,6 +103,7 @@ describe('endpoint post /', () => {
 
         await api
             .post('/api/blogs')
+            .auth(token, { type: 'bearer' })
             .send(blog)
             .expect(400)
 
@@ -108,6 +112,9 @@ describe('endpoint post /', () => {
     })
 
     test('blog without url is not added', async () => {
+        const users = await helper.usersWithoutJSON();
+        const token = security.token(users[0])
+
         const blog = {
             title: '1984',
             author: 'George Orwell'
@@ -115,6 +122,7 @@ describe('endpoint post /', () => {
 
         await api
             .post('/api/blogs')
+            .auth(token, { type: 'bearer' })
             .send(blog)
             .expect(400)
 
@@ -123,6 +131,9 @@ describe('endpoint post /', () => {
     })
 
     test('a blog without the likes parameter defaults to zero likes', async () => {
+        const users = await helper.usersWithoutJSON();
+        const token = security.token(users[0])
+
         const blog = {
             title: "IT",
             author: "Stephen King",
@@ -131,6 +142,7 @@ describe('endpoint post /', () => {
 
         const response = await api
             .post('/api/blogs')
+            .auth(token, { type: 'bearer' })
             .send(blog)
             .expect(200)
         expect(response.body.likes).toEqual(0)
@@ -139,18 +151,64 @@ describe('endpoint post /', () => {
 
 describe('endpoint delete /:id', () => {
     test('a blog can be deleted', async () => {
-        const blogsAtStart = await helper.blogsInDb()
-        const blogToDelete = blogsAtStart[0]
+        const users = await helper.usersWithoutJSON();
+        const token = security.token(users[0])
 
-        await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204)
+        const blog = {
+            title: "Dom Casmurro",
+            author: "Machado de Assis",
+            url: "https://fullstackopen.com/",
+            likes: 410945
+        }
+
+        const response = await api.post('/api/blogs')
+            .auth(token, { type: 'bearer' })
+            .send(blog)
+
+        const blogCreated = response.body
+        await api
+            .delete(`/api/blogs/${blogCreated.id}`)
+            .auth(token, { type: 'bearer' })
+            .expect(204)
         const blogsAtEnd = await helper.blogsInDb()
 
         expect(blogsAtEnd).toHaveLength(
-            helper.initialBlogs.length - 1
+            helper.initialBlogs.length
         )
 
         const titles = blogsAtEnd.map(r => r.title)
-        expect(titles).not.toContain(blogToDelete.title)
+        expect(titles).not.toContain(blogCreated.title)
+    })
+
+    test('only the creator can delete blog', async () => {
+        const users = await helper.usersWithoutJSON();
+        const token = security.token(users[0])
+
+        const blog = {
+            title: "Dom Casmurro",
+            author: "Machado de Assis",
+            url: "https://fullstackopen.com/",
+            likes: 410945
+        }
+
+        const response = await api.post('/api/blogs')
+            .auth(token, { type: 'bearer' })
+            .send(blog)
+
+        const newToken = security.token(users[1])
+        const blogCreated = response.body
+        await api
+            .delete(`/api/blogs/${blogCreated.id}`)
+            .auth(newToken, { type: 'bearer' })
+            .expect(403)
+        const blogsAtEnd = await helper.blogsInDb()
+
+        expect(blogsAtEnd).toHaveLength(
+            helper.initialBlogs.length + 1
+        )
+
+        const titles = blogsAtEnd.map(r => r.title)
+        expect(titles).toContain(blogCreated.title)
     })
 })
 
